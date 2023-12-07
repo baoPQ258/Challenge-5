@@ -1,0 +1,32 @@
+.pagination {
+  margin: 32px 0px;
+  width: 100%;
+}
+.input-group {
+  margin-left: 25%;
+}
+.input-page {
+  padding: 8px 12px !important;
+  max-width: 77px;
+}
+.ant-pagination .ant-pagination-item-active {
+  font-weight: 600;
+  background-color: #8E4EC6 !important;
+  border-color: #8E4EC6 !important; 
+  color: #FEFCFE !important;
+
+}
+.ant-pagination .ant-pagination-item-active a {
+  color: #FEFCFE !important;
+}
+.ant-pagination-prev a:hover,
+.ant-pagination-prev a:focus,
+.ant-pagination-prev a:active,
+.ant-pagination-next a:hover,
+.ant-pagination-next a:focus,
+.ant-pagination-next a:active {
+  color: #8E4EC6;
+}
+.custom-pagination-item{
+  color: #8E4EC6;
+}
