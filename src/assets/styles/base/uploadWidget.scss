@@ -16,7 +16,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); 
+  background-color: rgba(0, 0, 0, 0.5);
   z-index: 1;
 }
 .btn-icon-close {
@@ -24,6 +24,22 @@
   top: -10px;
   right: -10px;
 }
-.img-popup{
-    min-width: 44px;
+.img-popup {
+  min-width: 44px;
+}
+.ant-message {
+  .ant-message-notice-wrapper {
+    .ant-message-notice-content {
+      border-radius: 4px;
+      padding: 12px 24px;
+      color: #fbfefc;
+      font-size: 20px;
+      font-style: normal;
+      font-weight: 500;
+      line-height: 26px;
+    }
+  }
+}
+.error-message .ant-message-notice-content {
+  background: #e5484d !important;
 }

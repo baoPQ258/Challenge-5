@@ -11,6 +11,8 @@ import { upperCase } from "../../util/upperCase";
 import { Cards } from "../../constant/data";
 import closeIcon from "../../assets/images/close-line.svg";
 import searchBlack from "../../assets/images/search-line (1).svg";
+import checkFill from "../../assets/images/check-fill.svg";
+import axios from "axios";
 
 interface HeaderProps {
   setListCard: React.Dispatch<React.SetStateAction<CardItem[]>>;
@@ -21,25 +23,66 @@ function Header({ setListCard, setData }: HeaderProps) {
   const [open, setOpen] = useState(false);
   const unique_id = uuid();
   const small_id = unique_id.slice(0, 8);
-  const [image, setImage] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [image, setImage] = useState<any>();
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [searchResults, setSearchResults] = useState<CardItem[]>([]);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
-  const [clickedInsideDropdown, setClickedInsideDropdown] = useState(false);
+  const [messageApi, contextHolder] = message.useMessage();
+
+  const presetKey = "jwa7kthf";
+  const cloudName = "daiaizehs";
   const dataLocal: CardItem[] =
     JSON.parse(localStorage.getItem("items") as string) || ([] as CardItem[]);
   const updatedHistory = [searchTerm, ...searchHistory.slice(0, 4)];
   const showModal = () => {
     setOpen(true);
-    setImage("");
+    setImage(null);
   };
-  const [messageApi, contextHolder] = message.useMessage();
+  document.addEventListener("click", function () {
+    setIsDropdownOpen(false);
+  });
+  const error = () => {
+    messageApi.open({
+      type: "error",
+      content: "This file is too large.",
+      className: "error-message",
+      duration: 3,
+    });
+  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleFile = (e: any) => {
+    setImage(e?.target?.files[0]);
+    const file = e?.target?.files[0];
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", presetKey);
+    if (file.size / 1048576 < 5) {
+      axios
+        .post(
+          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+          formData
+        )
+        .then((res) => {
+          setImage(res.data.secure_url);
+        })
+        .catch(() => {
+          Error();
+        });
+    } else {
+      return error();
+    }
+  };
+
   const handleSearch = (value: string) => {
     if (value.trim() === "") {
       setListCard([]);
       setData([]);
+    } else {
+      setSearchTerm(value.trim());
     }
+
     const results = dataLocal.filter((item) =>
       item.name.toLowerCase().includes(value.toLowerCase())
     );
@@ -54,9 +97,14 @@ function Header({ setListCard, setData }: HeaderProps) {
       setListCard(results.concat(resultsData));
       setData([]);
     }
-    setIsDropdownOpen(false);
-    setSearchHistory(updatedHistory);
-    localStorage.setItem("searchHistory", JSON.stringify(updatedHistory));
+    setIsDropdownOpen(true);
+    if (value.trim() !== "") {
+      setSearchHistory(updatedHistory);
+      localStorage.setItem(
+        "searchHistory",
+        JSON.stringify(updatedHistory.filter((value: string) => value !== ""))
+      );
+    }
   };
 
   const success = () => {
@@ -65,22 +113,14 @@ function Header({ setListCard, setData }: HeaderProps) {
       content: `Successfully create`,
       className: "custom-class",
       duration: 3,
+      icon: <img src={checkFill}></img>,
     });
   };
   const inputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const pattern = /^[a-zA-Z ]+$/;
-    if (e.target.value === "") {
-      e.target.style.border = "1px solid #DBDBDB";
-    } else if (!pattern.test(e.target.value)) {
-      e.target.style.border = "1px solid red";
-    } else {
-      e.target.style.border = "1px solid #DBDBDB";
-    }
-    setSearchTerm(e.target.value);
-    setIsDropdownOpen(true);
-    if (e.target.value.trim()) {
-      setIsDropdownOpen(true);
-    } else if (!e.target.value.trim() && searchHistory) {
+    setSearchTerm(e.target.value.trim());
+    if (searchTerm.trim() === "" && !searchHistory) {
+      setIsDropdownOpen(false);
+    } else if (searchTerm.trim() === "" && searchHistory) {
       setIsDropdownOpen(true);
     }
     const results = dataLocal.filter((item) =>
@@ -117,7 +157,7 @@ function Header({ setListCard, setData }: HeaderProps) {
   };
   const handleCancel = () => {
     setOpen(false);
-    setImage("");
+    setImage(null);
   };
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -130,9 +170,12 @@ function Header({ setListCard, setData }: HeaderProps) {
     setListCard([value]);
     if (value.name) {
       setIsDropdownOpen(false);
+      setSearchHistory(updatedHistory);
+      localStorage.setItem(
+        "searchHistory",
+        JSON.stringify(updatedHistory.filter((value: string) => value !== ""))
+      );
     }
-    setSearchHistory(updatedHistory);
-    localStorage.setItem("searchHistory", JSON.stringify(updatedHistory));
   };
   const deleteHistory = (itemToDelete: string) => {
     const updatedHistory = searchHistory.filter(
@@ -143,13 +186,15 @@ function Header({ setListCard, setData }: HeaderProps) {
     localStorage.setItem("searchHistory", JSON.stringify(updatedHistory));
   };
   const handleBlur = () => {
-    setTimeout(() => {
-      if (!clickedInsideDropdown) {
-        setIsDropdownOpen(false);
-      } else {
-        setIsDropdownOpen(true);
-      }
-    }, 0);
+    if (searchTerm.trim() === "" && !searchHistory) {
+      setIsDropdownOpen(false);
+    } else if (searchTerm.trim() === "" && searchHistory) {
+      setIsDropdownOpen(true);
+    } else if (searchTerm.trim() !== "" && searchHistory) {
+      setIsDropdownOpen(true);
+    } else {
+      setIsDropdownOpen(false);
+    }
   };
   const highlightKeyword = (text: string) => {
     const regex = new RegExp(searchTerm, "gi");
@@ -161,18 +206,15 @@ function Header({ setListCard, setData }: HeaderProps) {
   useEffect(() => {
     const historyFromStorage = localStorage.getItem("searchHistory");
     if (historyFromStorage) {
-      setSearchHistory(JSON.parse(historyFromStorage));
+      const parsedHistory = JSON.parse(historyFromStorage);
+      setSearchHistory(parsedHistory.filter((value: string) => value !== ""));
     }
   }, []);
   return (
     <>
       {contextHolder}
       <Flex gap={24} vertical className="header-2">
-        <Flex
-          align="center"
-          justify="space-between"
-          onClick={() => setClickedInsideDropdown(false)}
-        >
+        <Flex align="center" justify="space-between">
           <div className="">
             <a href="/">
               <img src={social} alt=" Social card"></img>
@@ -187,6 +229,7 @@ function Header({ setListCard, setData }: HeaderProps) {
                 name={"create"}
                 image={image}
                 setImage={setImage}
+                handleFile={handleFile}
               >
                 <button className="btn-add btn-add-2" onClick={showModal}>
                   <img src={add} alt="plus icon"></img>
@@ -199,20 +242,20 @@ function Header({ setListCard, setData }: HeaderProps) {
             )}
           </div>
         </Flex>
-        <Flex
-          className="dropdown-search dropdown-search-2"
-          onClick={() => setClickedInsideDropdown(true)}
-          onBlur={() => setClickedInsideDropdown(false)}
-        >
+        <Flex className="dropdown-search dropdown-search-2">
           <Input
             className="input-2"
             placeholder="Search..."
             value={searchTerm}
-            maxLength={50}
             onChange={inputChange}
             onPressEnter={handleKeyPress}
             onBlur={handleBlur}
-            onFocus={inputChange}
+            onKeyDown={(event) => {
+              if (/[0-9]/.test(event.key)) {
+                event.preventDefault();
+              }
+            }}
+            status={searchTerm.trim().length > 50 ? "error" : ""}
             addonBefore={
               <button
                 className="btn-icon-search btn-icon-search-2"
@@ -244,7 +287,7 @@ function Header({ setListCard, setData }: HeaderProps) {
                 <li className="term">No results</li>
               )
             ) : (
-              searchHistory.map((item: string, index: number) => (
+              searchHistory.filter((value: string) => value !== "").map((item: string, index: number) => (
                 <li className="term" key={index} onClick={() => handleSearch}>
                   <Flex justify="space-between">
                     {" "}
@@ -280,6 +323,7 @@ function Header({ setListCard, setData }: HeaderProps) {
               name={"create"}
               image={image}
               setImage={setImage}
+              handleFile={handleFile}
             >
               <button className="btn-add" onClick={showModal}>
                 <img src={add} alt="plus icon"></img>
@@ -294,18 +338,22 @@ function Header({ setListCard, setData }: HeaderProps) {
           )}
           <Flex
             className="search-group dropdown-search"
-            onClick={() => setClickedInsideDropdown(true)}
-            onBlur={() => setClickedInsideDropdown(false)}
+            onClick={() => setIsDropdownOpen(true)}
           >
             <Input
               className="search"
               placeholder="Search..."
               value={searchTerm}
-              maxLength={50}
+              onKeyDown={(event) => {
+                if (/[0-9]/.test(event.key)) {
+                  event.preventDefault();
+                }
+              }}
+              status={searchTerm.trim().length > 50 ? "error" : ""}
               onChange={inputChange}
               onPressEnter={handleKeyPress}
               onBlur={handleBlur}
-              onFocus={inputChange}
+              onFocus={handleBlur}
             />
             <button
               className="btn-icon-search"
@@ -313,6 +361,7 @@ function Header({ setListCard, setData }: HeaderProps) {
             >
               <img className="img" src={search} alt="Search" />
             </button>
+
             <ul
               className={`dropdown-content-search w-87 ${
                 isDropdownOpen ? "open" : ""
@@ -333,12 +382,17 @@ function Header({ setListCard, setData }: HeaderProps) {
                 ) : (
                   <li className="term">No results</li>
                 )
-              ) : (
+              ) : searchHistory.length > 0 ? (
                 searchHistory.map((item: string, index: number) => (
-                  <li className="term" key={index} onClick={() => handleSearch}>
+                  <li className="term" key={index}>
                     <Flex justify="space-between">
                       {" "}
                       <p
+                        className="test-tearm-search"
+                        onClick={() => {
+                          handleSearch(item);
+                          setSearchTerm(item);
+                        }}
                         dangerouslySetInnerHTML={{
                           __html: highlightKeyword(item),
                         }}
@@ -351,6 +405,8 @@ function Header({ setListCard, setData }: HeaderProps) {
                     </Flex>
                   </li>
                 ))
+              ) : (
+                ""
               )}
             </ul>
           </Flex>

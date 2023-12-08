@@ -42,7 +42,7 @@ function Home() {
       return (
         <a className="custom-pagination-item">
           <Flex gap={8} className="btn-arrow" align="center">
-            <img  src={arrowLeft}></img>Prev
+            <img src={arrowLeft}></img>Prev
           </Flex>
         </a>
       );

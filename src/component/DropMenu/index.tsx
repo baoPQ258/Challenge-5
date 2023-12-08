@@ -1,7 +1,9 @@
+import axios from "axios";
 import { CardItem } from "../../interface/card";
 import { upperCase } from "../../util/upperCase";
 import PopUp from "../PopUp";
 import { useState } from "react";
+import { message } from "antd";
 
 interface DropMenuProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -24,6 +26,10 @@ function DropMenu({
   const [open, setOpen] = useState(false);
   const [isdDelete, setIsDelete] = useState(false);
   const [image, setImage] = useState(listCard.image || "");
+  const presetKey = "jwa7kthf";
+  const cloudName = "daiaizehs";
+  const [messageApi, contextHolder] = message.useMessage();
+
   const dataLocal: CardItem[] =
     JSON.parse(localStorage.getItem("items") as string) || ([] as CardItem[]);
   const newArr = dataLocal.filter((item: CardItem) => item.id !== listCard.id);
@@ -36,6 +42,38 @@ function DropMenu({
   };
   const showModalDelete = () => {
     setIsDelete(true);
+  };
+  const error = () => {
+    messageApi.open({
+      type: "error",
+      content: "This file is too large.",
+      className: "error-message",
+      duration: 3,
+    });
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleFile = (e: any) => {
+    setImage(e?.target?.files[0]);
+    const file = e?.target?.files[0];
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", presetKey);
+    if (file.size / 1048576 < 5) {
+      axios
+        .post(
+          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+          formData
+        )
+        .then((res) => {
+          setImage(res.data.secure_url);
+        })
+        .catch(() => {
+          Error();
+        });
+    } else {
+      return error();
+    }
   };
   const handleOk = (valueInput: string, valueDescription: string) => {
     setOpen(false);
@@ -70,6 +108,7 @@ function DropMenu({
   };
   return (
     <>
+      {contextHolder}
       <div className="dropdown">
         {children}
         <div className="dropdown-content">
@@ -82,6 +121,7 @@ function DropMenu({
               listCard={listCard}
               image={image}
               setImage={setImage}
+              handleFile={handleFile}
             >
               <button className="btn-icon btn-menu" onClick={showModal}>
                 Edit
@@ -101,6 +141,7 @@ function DropMenu({
               handleDelete={handleDelete}
               image={image}
               setImage={setImage}
+              handleFile={handleFile}
             >
               <button className="btn-icon btn-menu" onClick={showModalDelete}>
                 Delete

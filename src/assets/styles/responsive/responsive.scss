@@ -75,6 +75,9 @@
   .dot-2 {
     padding: 12px 17px;
     border-bottom: 1px solid #DBDBDB;
+    display: block;
+    display: flex;
+    flex-direction: row;
   }
   .img-dot {
     display: none;

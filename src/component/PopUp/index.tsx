@@ -1,4 +1,5 @@
-import {  Flex, Input, Modal, Space } from "antd";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Flex, Input, Modal, Space } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import { useEffect, useState } from "react";
 import { upperCase } from "../../util/upperCase";
@@ -16,6 +17,7 @@ interface PopUpProps {
   listCard?: CardItem;
   image?: string;
   setImage: React.Dispatch<React.SetStateAction<string>>;
+  handleFile: (e: any) => void;
 }
 
 function PopUp({
@@ -28,13 +30,13 @@ function PopUp({
   listCard,
   image,
   setImage,
+  handleFile,
 }: PopUpProps) {
   const [valueInput, setValueInput] = useState(listCard?.name || "");
   const [isDisabled, setIsDisabled] = useState(name !== "edit");
   const [valueDescription, setValueDescription] = useState(
     listCard?.description || ""
   );
-  const pattern = /^[a-zA-Z .,]+$/;
   let background = "";
 
   const input: HTMLInputElement | null = document.querySelector("input");
@@ -52,40 +54,23 @@ function PopUp({
   }
   const validateInputName = (e: React.ChangeEvent<HTMLInputElement>) => {
     setValueInput(upperCase(e.target.value));
-
-    if (e.target.value === "") {
-      e.target.style.border = "1px solid black";
-    } else if (!pattern.test(e.target.value) && e.target.value.trim()) {
-      e.target.style.border = "1px solid red";
-    } else {
-      e.target.style.border = "1px solid black";
-    }
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const validateInputDescription = (e: any) => {
     setValueDescription(upperCase(e.target.value));
-
-    if (e.target.value === "") {
-      e.target.style.border = "1px solid black";
-      isDisabled;
-    } else if (!pattern.test(e.target.value)) {
-      e.target.style.border = "1px solid red";
-    } else {
-      e.target.style.border = "1px solid black";
-    }
   };
   useEffect(() => {
     if (
       valueInput.trim().length > 0 &&
       valueDescription.trim().length > 0 &&
-      pattern.test(valueInput) &&
-      pattern.test(valueDescription)
+      valueInput.trim().length <= 50 &&
+      valueDescription.trim().length <= 200
     ) {
       setIsDisabled(false);
     } else {
       setIsDisabled(true);
     }
-  }, [valueInput, valueDescription, pattern]);
+  }, [valueInput, valueDescription]);
 
   return (
     <>
@@ -122,7 +107,7 @@ function PopUp({
               <h1>{name === "create" ? "Create card" : "Edit Card"}</h1>
             </div>
             <Flex gap={24} vertical className="w-100">
-              <UploadWidget image={image} setImage={setImage}></UploadWidget>
+              <UploadWidget handleFile={handleFile} image={image} setImage={setImage}></UploadWidget>
               <Flex gap={8} className="name-group" vertical>
                 <Flex justify="space-between" align="space-between">
                   <p className="text-popup">Name</p>
@@ -134,8 +119,13 @@ function PopUp({
                   className="input-name"
                   placeholder="Enter your name"
                   onChange={validateInputName}
-                  maxLength={50}
+                  onKeyDown={(event) => {
+                    if (/[0-9]/.test(event.key)) {
+                      event.preventDefault();
+                    }
+                  }}
                   defaultValue={name === "edit" ? listCard?.name : ""}
+                  status={valueInput.trim().length > 50 ? "error" : ""}
                 />
               </Flex>
               <Flex gap={8} className="name-group" vertical>
@@ -150,7 +140,7 @@ function PopUp({
                   placeholder="Type description here"
                   autoSize={{ minRows: 4, maxRows: 5 }}
                   onChange={validateInputDescription}
-                  maxLength={200}
+                  status={valueDescription.trim().length > 200 ? "error" : ""}
                   defaultValue={name === "edit" ? listCard?.description : ""}
                 />
               </Flex>

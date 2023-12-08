@@ -1,54 +1,21 @@
-import { Flex, Input, Tooltip, message } from "antd";
+import { Flex, Input, Tooltip } from "antd";
 import iconImage from "../../assets/images/image-add-fill.svg";
 import close from "../../assets/images/close-fill.svg";
-import axios from "axios";
 
 interface UploadWidget {
   image?: string;
   setImage: React.Dispatch<React.SetStateAction<string>>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  handleFile: (e: any) => void;
 }
 
-function UploadWidget({ image, setImage }: UploadWidget) {
-  const [messageApi, contextHolder] = message.useMessage();
-  const presetKey = 'jwa7kthf';
-  const cloudName = 'daiaizehs';
-
-
-  const error = () => {
-    messageApi.open({
-      type: "error",
-      content: "This file is too large.",
-    });
-  };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleFile = (e: any) => {
-    const file = e?.target?.files[0];
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", presetKey);
-    if (file.size / 1048576 < 5) {
-      axios
-        .post(
-          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-          formData
-        )
-        .then((res) => {
-          setImage(res.data.secure_url);
-        })
-        .catch(() => {
-          error();
-        });
-    } else {
-      return error();
-    }
-  };
+function UploadWidget({ image, setImage, handleFile }: UploadWidget) {
   const onclick = () => {
     setImage("");
   };
 
   return (
     <div>
-      {contextHolder}
       <Flex vertical justify="center" align="center">
         <Tooltip
           placement="right"

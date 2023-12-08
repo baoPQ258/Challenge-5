@@ -61,12 +61,23 @@
   font-weight: 500;
   line-height: 20px;
 }
-.open{
+.open {
   display: block;
 }
-.highlight{
-  color: #8E4EC6;
+.highlight {
+  color: #8e4ec6;
 }
-.header-2{
-  display:none
+.header-2 {
+  display: none;
+}
+
+.success-message .ant-message-notice-content {
+  background: var(--fill-success-default, #30a46c) !important;
+  }
+.ant-message-custom-content {
+  display: flex;
+  gap: 8px;
+}
+.test-tearm-search{
+  width:90%
 }
