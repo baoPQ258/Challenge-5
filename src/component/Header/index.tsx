@@ -266,46 +266,52 @@ function Header({ setListCard, setData }: HeaderProps) {
             }
           />
           <ul
-            onMouseDown={() => setIsDropdownOpen(true)}
-            className={`dropdown-content-search w-87 ${
-              isDropdownOpen ? "open" : ""
-            }`}
-          >
-            {searchTerm.trim() ? (
-              searchResults.length > 0 ? (
-                searchResults.map((item) => (
-                  <li
-                    className="term"
-                    key={item.id}
-                    onClick={() => handleTerm(item)}
-                    dangerouslySetInnerHTML={{
-                      __html: highlightKeyword(item.name),
-                    }}
-                  />
-                ))
-              ) : (
-                <li className="term">No results</li>
-              )
-            ) : (
-              searchHistory.filter((value: string) => value !== "").map((item: string, index: number) => (
-                <li className="term" key={index} onClick={() => handleSearch}>
-                  <Flex justify="space-between">
-                    {" "}
-                    <p
+              className={`dropdown-content-search w-87 ${
+                isDropdownOpen ? "open" : ""
+              }`}
+            >
+              {searchTerm.trim() ? (
+                searchResults.length > 0 ? (
+                  searchResults.map((item) => (
+                    <li
+                      className="term"
+                      key={item.id}
+                      onClick={() => handleTerm(item)}
                       dangerouslySetInnerHTML={{
-                        __html: highlightKeyword(item),
+                        __html: highlightKeyword(item.name),
                       }}
                     />
-                    <img
-                      src={closeIcon}
-                      alt="close button"
-                      onClick={() => deleteHistory(item)}
-                    />
-                  </Flex>
-                </li>
-              ))
-            )}
-          </ul>
+                  ))
+                ) : (
+                  <li className="term">No results</li>
+                )
+              ) : searchHistory.length > 0 ? (
+                searchHistory.map((item: string, index: number) => (
+                  <li className="term" key={index}>
+                    <Flex justify="space-between">
+                      {" "}
+                      <p
+                        className="test-tearm-search"
+                        onClick={() => {
+                          handleSearch(item);
+                          setSearchTerm(item);
+                        }}
+                        dangerouslySetInnerHTML={{
+                          __html: highlightKeyword(item),
+                        }}
+                      />
+                      <img
+                        src={closeIcon}
+                        alt="close button"
+                        onClick={() => deleteHistory(item)}
+                      />
+                    </Flex>
+                  </li>
+                ))
+              ) : (
+                ""
+              )}
+            </ul>
         </Flex>
       </Flex>
       <Flex className="header-1" align="center" vertical gap={32}>
