@@ -15,9 +15,10 @@ interface PopUpProps {
   open: boolean;
   name?: string;
   listCard?: CardItem;
-  image?: string;
-  setImage: React.Dispatch<React.SetStateAction<string>>;
+  image: string | undefined;
+  setImage: React.Dispatch<React.SetStateAction<string | undefined>>;
   handleFile: (e: any) => void;
+  isImage : boolean;
 }
 
 function PopUp({
@@ -31,22 +32,17 @@ function PopUp({
   image,
   setImage,
   handleFile,
+  isImage,
 }: PopUpProps) {
   const [valueInput, setValueInput] = useState(listCard?.name || "");
   const [isDisabled, setIsDisabled] = useState(name !== "edit");
+  const [isDefault, setIsDefault] = useState(false);
+
   const [valueDescription, setValueDescription] = useState(
     listCard?.description || ""
   );
   let background = "";
 
-  const input: HTMLInputElement | null = document.querySelector("input");
-  if (input) {
-    input.addEventListener("keydown", (event: KeyboardEvent) => {
-      if (/\d/g.test(event.key)) {
-        event.preventDefault();
-      }
-    });
-  }
   if (name == "create" || name == "edit") {
     background = "btn-create-form bg-pupple";
   } else {
@@ -59,18 +55,28 @@ function PopUp({
   const validateInputDescription = (e: any) => {
     setValueDescription(upperCase(e.target.value));
   };
+  const onclick = () => {
+    setIsDefault(true);
+    setImage('')
+    setIsDisabled(true);
+  };
+  useEffect(() => {
+    setIsDefault(false);
+  },[image])
   useEffect(() => {
     if (
       valueInput.trim().length > 0 &&
       valueDescription.trim().length > 0 &&
       valueInput.trim().length <= 50 &&
-      valueDescription.trim().length <= 200
+      valueDescription.trim().length <= 200 &&
+      (image || listCard?.image) &&
+      isImage
     ) {
       setIsDisabled(false);
     } else {
       setIsDisabled(true);
     }
-  }, [valueInput, valueDescription]);
+  }, [valueInput, valueDescription, image, listCard?.image, isImage]);
 
   return (
     <>
@@ -107,7 +113,13 @@ function PopUp({
               <h1>{name === "create" ? "Create card" : "Edit Card"}</h1>
             </div>
             <Flex gap={24} vertical className="w-100">
-              <UploadWidget handleFile={handleFile} image={image} setImage={setImage}></UploadWidget>
+              <UploadWidget
+                isDefault={isDefault}
+                handleFile={handleFile}
+                image={image}
+                setImage={setImage}
+                onclick={onclick}
+              ></UploadWidget>
               <Flex gap={8} className="name-group" vertical>
                 <Flex justify="space-between" align="space-between">
                   <p className="text-popup">Name</p>
@@ -120,7 +132,12 @@ function PopUp({
                   placeholder="Enter your name"
                   onChange={validateInputName}
                   onKeyDown={(event) => {
-                    if (/[0-9]/.test(event.key)) {
+                    const key = event.key;
+                    const isAlphabeticOrSpace =
+                      (key >= "a" && key <= "z") ||
+                      (key >= "A" && key <= "Z") ||
+                      key === " ";
+                    if (!isAlphabeticOrSpace) {
                       event.preventDefault();
                     }
                   }}

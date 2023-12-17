@@ -16,7 +16,7 @@ import arowRight from "../../assets/images/arrow-right-s-line.svg";
 
 function Home() {
   const [listCard, setListCard] = useState<CardItem[]>([]);
-  const [data, setData] = useState<CardItem[]>(Cards);
+  const [data, setData] = useState<CardItem[]>([...Cards]);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchPage, setSearchPage] = useState<number | undefined>(undefined);
 
@@ -25,7 +25,10 @@ function Home() {
       JSON.parse(localStorage.getItem("items") as string) || ([] as CardItem[]);
     setListCard(dataLocal);
   }, []);
-  const itemsPerPage = 10;
+  const itemsPerPageDesktop = 10;
+  const itemsPerPageMobile = 5;
+  const itemsPerPage =
+    window.innerWidth >= 768 ? itemsPerPageDesktop : itemsPerPageMobile;
   const totalItems = listCard.length + data.length;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -79,6 +82,9 @@ function Home() {
     } else {
       setSearchPage(undefined);
     }
+    if (inputPage === "") {
+      setSearchPage(1);
+    }
   };
 
   return (
@@ -97,7 +103,7 @@ function Home() {
                 ></CardState>
               ))}
             </Row>
-            {totalItems > 10 ? (
+            {totalItems > itemsPerPage ? (
               <Flex justify="flex-end" className="pagination" align="center">
                 <AntPagination
                   current={searchPage !== undefined ? searchPage : currentPage}

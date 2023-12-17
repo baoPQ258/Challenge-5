@@ -30,6 +30,7 @@ function Header({ setListCard, setData }: HeaderProps) {
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const [messageApi, contextHolder] = message.useMessage();
+  const [isImage,setIsImage] = useState<boolean>(false);
 
   const presetKey = "jwa7kthf";
   const cloudName = "daiaizehs";
@@ -66,9 +67,12 @@ function Header({ setListCard, setData }: HeaderProps) {
         )
         .then((res) => {
           setImage(res.data.secure_url);
+          setIsImage(true)
         })
         .catch(() => {
           Error();
+          error();
+          setIsImage(false)
         });
     } else {
       return error();
@@ -76,34 +80,33 @@ function Header({ setListCard, setData }: HeaderProps) {
   };
 
   const handleSearch = (value: string) => {
-    if (value.trim() === "") {
-      setListCard([]);
-      setData([]);
-    } else {
+    if (value.trim().length > 0 && value.trim().length <= 50) {
       setSearchTerm(value.trim());
-    }
 
-    const results = dataLocal.filter((item) =>
-      item.name.toLowerCase().includes(value.toLowerCase())
-    );
-    const resultsData = Cards.filter((item) =>
-      item.name.toLowerCase().includes(value.toLowerCase())
-    );
-    if (results.concat(resultsData).length < 1) {
+      const results = dataLocal.filter((item) =>
+        item.name.toLowerCase().includes(value.toLowerCase())
+      );
+      const resultsData = Cards.filter((item) =>
+        item.name.toLowerCase().includes(value.toLowerCase())
+      );
+      if (results.concat(resultsData).length < 1) {
+        setListCard([]);
+        setData([]);
+      } else {
+        setSearchResults(results.concat(resultsData));
+        setListCard(results.concat(resultsData));
+        setData([]);
+      }
+      if (value.trim() !== "") {
+        setSearchHistory(updatedHistory);
+        localStorage.setItem(
+          "searchHistory",
+          JSON.stringify(updatedHistory.filter((value: string) => value !== ""))
+        );
+      }
+    } else if (value === "") {
       setListCard([]);
       setData([]);
-    } else {
-      setSearchResults(results.concat(resultsData));
-      setListCard(results.concat(resultsData));
-      setData([]);
-    }
-    setIsDropdownOpen(true);
-    if (value.trim() !== "") {
-      setSearchHistory(updatedHistory);
-      localStorage.setItem(
-        "searchHistory",
-        JSON.stringify(updatedHistory.filter((value: string) => value !== ""))
-      );
     }
   };
 
@@ -113,26 +116,37 @@ function Header({ setListCard, setData }: HeaderProps) {
       content: `Successfully create`,
       className: "custom-class",
       duration: 3,
-      icon: <img src={checkFill}></img>,
+      icon: <img src={checkFill} alt="check icon"></img>,
     });
   };
   const inputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value.trim());
-    if (searchTerm.trim() === "" && !searchHistory) {
-      setIsDropdownOpen(false);
-    } else if (searchTerm.trim() === "" && searchHistory) {
-      setIsDropdownOpen(true);
-    }
-    const results = dataLocal.filter((item) =>
-      item.name.toLowerCase().includes(e.target.value.trim().toLowerCase())
-    );
-    const resultsData = Cards.filter((item) =>
-      item.name.toLowerCase().includes(e.target.value.trim().toLowerCase())
-    );
-    if (results.concat(resultsData).length >= 1) {
-      setSearchResults(results.concat(resultsData));
+    const inputValue = e.target.value.trim().toLowerCase();
+    setSearchTerm(inputValue);
+
+    if (inputValue === "") {
+      if (searchHistory.length > 0) {
+        setSearchResults(
+          searchHistory.map((item) => ({ name: item } as CardItem))
+        );
+        setIsDropdownOpen(true);
+      } else {
+        setSearchResults([]);
+        setIsDropdownOpen(false); 
+      }
     } else {
-      setSearchResults([]);
+      const results = dataLocal.filter((item) =>
+        item.name.toLowerCase().includes(inputValue)
+      );
+      const resultsData = Cards.filter((item) =>
+        item.name.toLowerCase().includes(inputValue)
+      );
+
+      if (results.length > 0 || resultsData.length > 0) {
+        setSearchResults(results.concat(resultsData));
+        setIsDropdownOpen(true);
+      } else {
+        setSearchResults([]);
+      }
     }
   };
   const handleOk = (valueInput: string, valueDescription: string) => {
@@ -185,17 +199,6 @@ function Header({ setListCard, setData }: HeaderProps) {
     setSearchHistory(updatedHistory);
     localStorage.setItem("searchHistory", JSON.stringify(updatedHistory));
   };
-  const handleBlur = () => {
-    if (searchTerm.trim() === "" && !searchHistory) {
-      setIsDropdownOpen(false);
-    } else if (searchTerm.trim() === "" && searchHistory) {
-      setIsDropdownOpen(true);
-    } else if (searchTerm.trim() !== "" && searchHistory) {
-      setIsDropdownOpen(true);
-    } else {
-      setIsDropdownOpen(false);
-    }
-  };
   const highlightKeyword = (text: string) => {
     const regex = new RegExp(searchTerm, "gi");
     return text.replace(
@@ -230,6 +233,7 @@ function Header({ setListCard, setData }: HeaderProps) {
                 image={image}
                 setImage={setImage}
                 handleFile={handleFile}
+                isImage={isImage}
               >
                 <button className="btn-add btn-add-2" onClick={showModal}>
                   <img src={add} alt="plus icon"></img>
@@ -246,16 +250,28 @@ function Header({ setListCard, setData }: HeaderProps) {
           <Input
             className="input-2"
             placeholder="Search..."
-            value={searchTerm}
-            onChange={inputChange}
-            onPressEnter={handleKeyPress}
-            onBlur={handleBlur}
             onKeyDown={(event) => {
-              if (/[0-9]/.test(event.key)) {
+              const key = event.key;
+              const isAlphabeticOrSpace =
+                (key >= "a" && key <= "z") ||
+                (key >= "A" && key <= "Z") ||
+                key === " ";
+              if (!isAlphabeticOrSpace) {
                 event.preventDefault();
               }
             }}
             status={searchTerm.trim().length > 50 ? "error" : ""}
+            onChange={inputChange}
+            onPressEnter={handleKeyPress}
+            onFocus={(event) => {
+              if (searchHistory.length > 0) {
+                setIsDropdownOpen(true);
+                event.stopPropagation();
+              }
+            }}
+            onClick={(event) => {
+              event.stopPropagation();
+            }}
             addonBefore={
               <button
                 className="btn-icon-search btn-icon-search-2"
@@ -266,52 +282,52 @@ function Header({ setListCard, setData }: HeaderProps) {
             }
           />
           <ul
-              className={`dropdown-content-search w-87 ${
-                isDropdownOpen ? "open" : ""
-              }`}
-            >
-              {searchTerm.trim() ? (
-                searchResults.length > 0 ? (
-                  searchResults.map((item) => (
-                    <li
-                      className="term"
-                      key={item.id}
-                      onClick={() => handleTerm(item)}
-                      dangerouslySetInnerHTML={{
-                        __html: highlightKeyword(item.name),
-                      }}
-                    />
-                  ))
-                ) : (
-                  <li className="term">No results</li>
-                )
-              ) : searchHistory.length > 0 ? (
-                searchHistory.map((item: string, index: number) => (
-                  <li className="term" key={index}>
-                    <Flex justify="space-between">
-                      {" "}
-                      <p
-                        className="test-tearm-search"
-                        onClick={() => {
-                          handleSearch(item);
-                          setSearchTerm(item);
-                        }}
-                        dangerouslySetInnerHTML={{
-                          __html: highlightKeyword(item),
-                        }}
-                      />
-                      <img
-                        src={closeIcon}
-                        alt="close button"
-                        onClick={() => deleteHistory(item)}
-                      />
-                    </Flex>
-                  </li>
+            className={`dropdown-content-search w-87 ${
+              isDropdownOpen ? "open" : ""
+            }`}
+          >
+            {searchTerm.trim() ? (
+              searchResults.length > 0 ? (
+                searchResults.map((item) => (
+                  <li
+                    className="term"
+                    key={item.id}
+                    onClick={() => handleTerm(item)}
+                    dangerouslySetInnerHTML={{
+                      __html: highlightKeyword(item.name),
+                    }}
+                  />
                 ))
               ) : (
-                ""
-              )}
-            </ul>
+                <li className="term">No results</li>
+              )
+            ) : searchHistory.length > 0 ? (
+              searchHistory.map((item: string, index: number) => (
+                <li className="term" key={index}>
+                  <Flex justify="space-between">
+                    {" "}
+                    <p
+                      className="test-tearm-search"
+                      onClick={() => {
+                        handleSearch(item);
+                        setSearchTerm(item);
+                      }}
+                      dangerouslySetInnerHTML={{
+                        __html: highlightKeyword(item),
+                      }}
+                    />
+                    <img
+                      src={closeIcon}
+                      alt="close button"
+                      onClick={() => deleteHistory(item)}
+                    />
+                  </Flex>
+                </li>
+              ))
+            ) : (
+              ""
+            )}
+          </ul>
         </Flex>
       </Flex>
       <Flex className="header-1" align="center" vertical gap={32}>
@@ -330,6 +346,7 @@ function Header({ setListCard, setData }: HeaderProps) {
               image={image}
               setImage={setImage}
               handleFile={handleFile}
+              isImage={isImage}
             >
               <button className="btn-add" onClick={showModal}>
                 <img src={add} alt="plus icon"></img>
@@ -349,17 +366,28 @@ function Header({ setListCard, setData }: HeaderProps) {
             <Input
               className="search"
               placeholder="Search..."
-              value={searchTerm}
               onKeyDown={(event) => {
-                if (/[0-9]/.test(event.key)) {
+                const key = event.key;
+                const isAlphabeticOrSpace =
+                  (key >= "a" && key <= "z") ||
+                  (key >= "A" && key <= "Z") ||
+                  key === " ";
+                if (!isAlphabeticOrSpace) {
                   event.preventDefault();
                 }
               }}
               status={searchTerm.trim().length > 50 ? "error" : ""}
               onChange={inputChange}
               onPressEnter={handleKeyPress}
-              onBlur={handleBlur}
-              onFocus={handleBlur}
+              onFocus={(event) => {
+                if (searchHistory.length > 0) {
+                  setIsDropdownOpen(true);
+                  event.stopPropagation();
+                }
+              }}
+              onClick={(event) => {
+                event.stopPropagation();
+              }}
             />
             <button
               className="btn-icon-search"
@@ -368,13 +396,40 @@ function Header({ setListCard, setData }: HeaderProps) {
               <img className="img" src={search} alt="Search" />
             </button>
 
-            <ul
-              className={`dropdown-content-search w-87 ${
-                isDropdownOpen ? "open" : ""
-              }`}
-            >
-              {searchTerm.trim() ? (
-                searchResults.length > 0 ? (
+            {isDropdownOpen && (
+              <ul
+                className={`dropdown-content-search w-87 ${
+                  isDropdownOpen ? "open" : ""
+                }`}
+              >
+                {searchTerm.trim() === "" ? (
+                  searchHistory.length > 0 ? (
+                    searchHistory.map((item, index) => (
+                      <li className="term" key={index}>
+                        <Flex justify="space-between">
+                          {" "}
+                          <p
+                            className="test-tearm-search"
+                            onClick={() => {
+                              handleSearch(item);
+                              setSearchTerm(item);
+                            }}
+                            dangerouslySetInnerHTML={{
+                              __html: highlightKeyword(item),
+                            }}
+                          />
+                          <img
+                            src={closeIcon}
+                            alt="close button"
+                            onClick={() => deleteHistory(item)}
+                          />
+                        </Flex>
+                      </li>
+                    ))
+                  ) : (
+                    ""
+                  )
+                ) : searchResults.length > 0 ? (
                   searchResults.map((item) => (
                     <li
                       className="term"
@@ -387,34 +442,9 @@ function Header({ setListCard, setData }: HeaderProps) {
                   ))
                 ) : (
                   <li className="term">No results</li>
-                )
-              ) : searchHistory.length > 0 ? (
-                searchHistory.map((item: string, index: number) => (
-                  <li className="term" key={index}>
-                    <Flex justify="space-between">
-                      {" "}
-                      <p
-                        className="test-tearm-search"
-                        onClick={() => {
-                          handleSearch(item);
-                          setSearchTerm(item);
-                        }}
-                        dangerouslySetInnerHTML={{
-                          __html: highlightKeyword(item),
-                        }}
-                      />
-                      <img
-                        src={closeIcon}
-                        alt="close button"
-                        onClick={() => deleteHistory(item)}
-                      />
-                    </Flex>
-                  </li>
-                ))
-              ) : (
-                ""
-              )}
-            </ul>
+                )}
+              </ul>
+            )}
           </Flex>
         </div>
       </Flex>

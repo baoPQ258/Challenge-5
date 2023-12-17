@@ -4,6 +4,9 @@ import { upperCase } from "../../util/upperCase";
 import PopUp from "../PopUp";
 import { useState } from "react";
 import { message } from "antd";
+import { Cards } from "../../constant/data";
+import errorFill from "../../assets/images/error-warning-line.svg"
+
 
 interface DropMenuProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -25,7 +28,9 @@ function DropMenu({
 }: DropMenuProps) {
   const [open, setOpen] = useState(false);
   const [isdDelete, setIsDelete] = useState(false);
-  const [image, setImage] = useState(listCard.image || "");
+  const [image, setImage] = useState(listCard.image);
+  const [isImage,setIsImage] = useState<boolean>(false);
+
   const presetKey = "jwa7kthf";
   const cloudName = "daiaizehs";
   const [messageApi, contextHolder] = message.useMessage();
@@ -49,8 +54,10 @@ function DropMenu({
       content: "This file is too large.",
       className: "error-message",
       duration: 3,
+      icon: <img src={errorFill} alt="check icon"></img>,
     });
   };
+  
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleFile = (e: any) => {
@@ -67,9 +74,12 @@ function DropMenu({
         )
         .then((res) => {
           setImage(res.data.secure_url);
+          setIsImage(true)
         })
         .catch(() => {
           Error();
+          error();
+          setIsImage(false)
         });
     } else {
       return error();
@@ -78,15 +88,14 @@ function DropMenu({
   const handleOk = (valueInput: string, valueDescription: string) => {
     setOpen(false);
     if (data.includes(listCard)) {
-      data[indexData].name = upperCase(valueInput);
-      data[indexData].description = upperCase(valueDescription);
-      data[indexData].image = image;
-      setData(data);
-      setOpen(false);
+      Cards[indexData].name = upperCase(valueInput);
+      Cards[indexData].description = upperCase(valueDescription);
+      Cards[indexData].image = image || listCard.image;
+      setData(Cards);
     } else {
       dataLocal[indexDataLocal].name = upperCase(valueInput);
       dataLocal[indexDataLocal].description = upperCase(valueDescription);
-      dataLocal[indexDataLocal].image = image;
+      dataLocal[indexDataLocal].image = image || listCard.image;
       localStorage.setItem("items", JSON.stringify(dataLocal));
       setListCard(dataLocal);
     }
@@ -106,6 +115,7 @@ function DropMenu({
     }
     setOpenDrawer(false);
   };
+  
   return (
     <>
       {contextHolder}
@@ -119,9 +129,10 @@ function DropMenu({
               open={open}
               name={"edit"}
               listCard={listCard}
-              image={image}
+              image={image || listCard.image}
               setImage={setImage}
               handleFile={handleFile}
+              isImage={listCard.image ? true : isImage}
             >
               <button className="btn-icon btn-menu" onClick={showModal}>
                 Edit
@@ -142,6 +153,7 @@ function DropMenu({
               image={image}
               setImage={setImage}
               handleFile={handleFile}
+              isImage={listCard.image ? true : isImage}
             >
               <button className="btn-icon btn-menu" onClick={showModalDelete}>
                 Delete

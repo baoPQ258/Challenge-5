@@ -43,7 +43,6 @@ function DrawerDetail({
   const [inputNameValue, setInputNameValue] = useState("");
   const [inputCommentValue, setInputCommentValue] = useState("");
   const [number, setNumber] = useState(5);
-  const pattern = /^[a-zA-Z .,]+$/;
   const dataLocal: CardItem[] =
     JSON.parse(localStorage.getItem("items") as string) || ([] as CardItem[]);
   const indexDataLocal = dataLocal.findIndex((item) => item.id === listCard.id);
@@ -82,43 +81,28 @@ function DrawerDetail({
 
   const inputNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputNameValue(e.target.value.trim());
-    if (e.target.value === "") {
-      e.target.style.border = "1px solid black";
-    } else if (!pattern.test(e.target.value)) {
-      e.target.style.border = "1px solid red";
-    } else {
-      e.target.style.border = "1px solid black";
-    }
   };
   const inputCommnentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputCommentValue(e.target.value.trim());
-    if (e.target.value === "") {
-      e.target.style.border = "1px solid black";
-    } else if (!pattern.test(e.target.value)) {
-      e.target.style.border = "1px solid red";
-    } else {
-      e.target.style.border = "1px solid black";
-    }
   };
   const showMore = () => {
     setNumber(number + 5);
   };
   const back = () => {
     setOpen(false);
-  }
+  };
   useEffect(() => {
     if (
-      (inputNameValue &&
-        inputCommentValue &&
-        pattern.test(inputNameValue) &&
-        pattern.test(inputCommentValue)) ||
-      (checked && inputCommentValue && pattern.test(inputCommentValue))
+      inputNameValue.trim() &&
+      inputCommentValue.trim() &&
+      inputNameValue.trim().length <= 50 &&
+      inputCommentValue.trim().length <= 50
     ) {
       setDisabled(false);
     } else {
       setDisabled(true);
     }
-  }, [inputNameValue, inputCommentValue, checked, pattern]);
+  }, [inputNameValue, inputCommentValue, checked]);
   useEffect(() => {
     if (open) {
       setNumber(5);
@@ -251,13 +235,23 @@ function DrawerDetail({
                 onChange={inputNameChange}
                 placeholder="Your name"
                 disabled={checked}
-                maxLength={50}
+                onKeyDown={(event) => {
+                  const key = event.key;
+                  const isAlphabeticOrSpace =
+                    (key >= "a" && key <= "z") ||
+                    (key >= "A" && key <= "Z") ||
+                    key === " ";
+                  if (!isAlphabeticOrSpace) {
+                    event.preventDefault();
+                  }
+                }}
+                status={inputNameValue.trim().length > 50 ? "error" : ""}
               ></Input>
               <Input
                 className="input-name-post"
                 onChange={inputCommnentChange}
                 placeholder="Type your comment here"
-                maxLength={50}
+                status={inputCommentValue.trim().length > 50 ? "error" : ""}
               ></Input>
             </Flex>
             <button
