@@ -81,12 +81,12 @@ function CardState({ listCard, setListCard, setData, data }: CardItemProps) {
             </Row>
           </div>
           <Flex className="heart-group" gap={24} justify={"flex-end"}>
-            <div>
+            <Flex gap={8}>
               <button className="btn-icon btn-heart" onClick={changeIcon}>
                 <img className="" src={fill} alt="heart" />
-                <p className={classText}>{toK(listCard.like)}</p>
               </button>
-            </div>
+                <p className={classText}>{toK(listCard.like)}</p>
+            </Flex>
             <div>
               <button className="btn-icon btn-heart" onClick={showDrawer}>
                 <img src={chat} alt="chat" />

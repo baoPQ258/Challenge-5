@@ -30,7 +30,7 @@ function Header({ setListCard, setData }: HeaderProps) {
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const [messageApi, contextHolder] = message.useMessage();
-  const [isImage,setIsImage] = useState<boolean>(false);
+  const [isImage, setIsImage] = useState<boolean>(false);
 
   const presetKey = "jwa7kthf";
   const cloudName = "daiaizehs";
@@ -67,12 +67,12 @@ function Header({ setListCard, setData }: HeaderProps) {
         )
         .then((res) => {
           setImage(res.data.secure_url);
-          setIsImage(true)
+          setIsImage(true);
         })
         .catch(() => {
           Error();
           error();
-          setIsImage(false)
+          setIsImage(false);
         });
     } else {
       return error();
@@ -131,7 +131,7 @@ function Header({ setListCard, setData }: HeaderProps) {
         setIsDropdownOpen(true);
       } else {
         setSearchResults([]);
-        setIsDropdownOpen(false); 
+        setIsDropdownOpen(false);
       }
     } else {
       const results = dataLocal.filter((item) =>
@@ -251,12 +251,16 @@ function Header({ setListCard, setData }: HeaderProps) {
             className="input-2"
             placeholder="Search..."
             onKeyDown={(event) => {
+              const target = event.target as HTMLInputElement;
               const key = event.key;
               const isAlphabeticOrSpace =
                 (key >= "a" && key <= "z") ||
                 (key >= "A" && key <= "Z") ||
                 key === " ";
               if (!isAlphabeticOrSpace) {
+                event.preventDefault();
+              }
+              if (key === " " && target.selectionStart === 0) {
                 event.preventDefault();
               }
             }}
@@ -367,12 +371,16 @@ function Header({ setListCard, setData }: HeaderProps) {
               className="search"
               placeholder="Search..."
               onKeyDown={(event) => {
+                const target = event.target as HTMLInputElement;
                 const key = event.key;
                 const isAlphabeticOrSpace =
                   (key >= "a" && key <= "z") ||
                   (key >= "A" && key <= "Z") ||
                   key === " ";
                 if (!isAlphabeticOrSpace) {
+                  event.preventDefault();
+                }
+                if (key === " " && target.selectionStart === 0) {
                   event.preventDefault();
                 }
               }}

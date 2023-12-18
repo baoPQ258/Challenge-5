@@ -236,12 +236,16 @@ function DrawerDetail({
                 placeholder="Your name"
                 disabled={checked}
                 onKeyDown={(event) => {
+                  const target = event.target as HTMLInputElement;
                   const key = event.key;
                   const isAlphabeticOrSpace =
                     (key >= "a" && key <= "z") ||
                     (key >= "A" && key <= "Z") ||
                     key === " ";
                   if (!isAlphabeticOrSpace) {
+                    event.preventDefault();
+                  }
+                  if (key === " " && target.selectionStart === 0) {
                     event.preventDefault();
                   }
                 }}
